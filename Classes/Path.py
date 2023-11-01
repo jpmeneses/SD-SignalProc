@@ -8,24 +8,15 @@ import os.path
 import numpy as np
 
 # This code is used to create the database. all the information about the Database
-# are gathered in Path Classe with information such as the number of subjects used to train / validate / test
+# are gathered in Path Class with information such as the number of subjects used to train / validate / test
 # Window_size with step or if each stride must be cut separately (only work if there is GRF)
 
 class Path_info():
 
     def __init__(self, subject_ind):
 
-        pass
-
-subject_ind = 3
-self = Path_info(subject_ind=subject_ind)
-
-class Path_info():
-
-    def __init__(self, subject_ind):
-
         self.subject_ind = subject_ind
-        self.subject_name = str(subject_ind)
+        self.subject_name = str(subject_ind+1).zfill(2)
 
         self.exercises_name = ['bent_row','lat_raise', 'sh_press']
 
@@ -37,13 +28,13 @@ class Path_info():
         self.cwd = os.getcwd()
         self.path_abs = os.path.abspath(os.path.join(self.cwd, os.pardir))
 
-        self.path_experiment_data_subject = os.path.join(self.path_abs ,'Data Experiment','Subject'+str(self.subject_ind + 1).zfill(2))
+        self.path_experiment_data_subject = os.path.join(self.path_abs,'Data',self.subject_name)
 
-        self.exercise_list_file = os.path.join(self.path_abs, 'Data Experiment','Subject' + str(self.subject_ind+1).zfill(2), "Timing_sheet.xlsx")
+        self.exercise_list_file = os.path.join(self.path_abs,'Data',self.subject_name, "Timing_sheet.xlsx")
 
-        self.data_subject_path_IMU = os.path.join(self.path_abs,'Data Experiment','Subject' + str(self.subject_ind + 1).zfill(2),'IMU')
-        self.data_subject_path_markers = os.path.join(self.path_abs, 'Data Experiment','Subject' + str(self.subject_ind + 1).zfill(2), 'Markers')
-        self.data_subject_path_others = os.path.join(self.path_abs, 'Data Experiment','Subject', str(self.subject_ind + 1).zfill(2),'Others')
+        self.data_subject_path_IMU = os.path.join(self.path_abs,'Data',self.subject_name,'IMU')
+        self.data_subject_path_markers = os.path.join(self.path_abs,'Data',self.subject_name, 'Markers')
+        self.data_subject_path_others = os.path.join(self.path_abs,'Data',self.subject_name,'Others')
 
         is_exist = os.path.isfile(self.exercise_list_file)
 
@@ -79,9 +70,6 @@ class Path_info():
 
         self.MM_path = os.path.join(self.path_base, self.subject_name, 'MM')
         self.path_mass = os.path.join(self.path_base, self.subject_name, 'Mass')
-
-
-        self.subject_name = str(subject_ind)
 
         if not os.path.exists(self.MM_path):
             os.makedirs(self.MM_path)
@@ -133,12 +121,13 @@ class Path_info():
         if not os.path.exists(self.path_DB_N):
             os.makedirs(self.path_DB_N)
 
-        # Train/Validate/Test path
+        # Train/Val/Test path
         self.path_DB_base_train_valid_test = os.path.join(self.path_DB_N, "Train_valid_test")
 
         if not os.path.exists(self.path_DB_base_train_valid_test):
             os.makedirs(self.path_DB_base_train_valid_test)
 
+    
     def get_DB_info(self, DB_N=0, display_info=True):
 
         parameters = {'window_size': [200],
@@ -192,20 +181,17 @@ class Path_info():
 
         if self.which_data == ['IMU']:
 
-            self.n_subjects_train = 1
+            self.n_subjects_train = 2
             self.n_subjects_valid = 1
             self.n_subjects_test = 1
-
-            self.n_subjects_train = 30
-            self.n_subjects_valid = 3
-            self.n_subjects_test = 3
 
             self.test_set = [[19,18,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20],  # without pain
                               [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20], #shoulder pain
                               [9, 8, 14, 13, 11, 3, 1, 5, 4, 12, 2, 10, 6],
                               [2, 10, 6, 9, 8, 14, 13, 11, 3, 1, 5, 4, 12]]
 
-            self.subjects = self.test_set[self.configuration['test_set']]
+            # self.subjects = self.test_set[self.configuration['test_set']]
+            self.subjects = [0,1,2,3]
 
             self.subjects_train_valid = self.subjects[:self.n_subjects_train + self.n_subjects_valid]
             self.subjects_test = self.subjects[-self.n_subjects_test:]
@@ -243,6 +229,7 @@ class Path_info():
         if not os.path.exists(self.tensorboard_path_DB):
             os.makedirs(self.tensorboard_path_DB)
 
+    
     def get_DB_path_2(self, DB_N=0, delete_folder=False):
 
         self.path_DB_2 = os.path.join(self.path_base, "Database2")
@@ -261,6 +248,7 @@ class Path_info():
         if not os.path.exists(self.path_DB_base_train_valid_test_2):
             os.makedirs(self.path_DB_base_train_valid_test_2)
 
+    
     def get_DB_info_2(self, DB_N=0, display_info=True):
 
         parameters = {'window_size': [200],
@@ -316,9 +304,10 @@ class Path_info():
 
         if self.which_data == ['IMU']:
 
-            self.subjects = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35]
+            #self.subjects = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35]
+            self.subjects = [0,1,2]
 
-            self.IMU_names = ['timestamp','acc_x','acc_y','acc_z','gyro_x','gyro_y','gyro_z']
+            self.IMU_names = ['time','acc_x','acc_y','acc_z','gyro_x','gyro_y','gyro_z']
             self.dof_to_train_ind = [i for i in range(0, 36)]
 
             self.Y_names = self.IMU_names

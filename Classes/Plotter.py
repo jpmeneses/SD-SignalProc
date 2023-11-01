@@ -1,20 +1,20 @@
-import matplotlib.pylab as plt
+import matplotlib.pyplot as plt
 
 class Plotter:
 
-    def __init__(self, data):
+    def __init__(self, data, fig, ax1, ax2):
 
         self.points = []
 
         plt.ion()
-        self.fig = plt.figure(1)
-        self.ax1 = plt.subplot(2, 1, 1)
+        self.fig = fig
+        self.ax1 = ax1
+        self.ax2 = ax2
 
-        self.fig.suptitle('Right click + z')
         self.ax1.plot(data[:, 0], 'b')
-        self.ax2 = plt.subplot(2, 1, 2)
         self.ax2.plot(data[:, 1], 'r')
 
+        self.fig.suptitle('Right click + z')
         self.fig.subplots_adjust(left=0.02, bottom=0.1, right=0.98, top=0.92, wspace=0.05, hspace=0.1)
 
         self.fig.canvas.mpl_connect('button_press_event', self.onclick)

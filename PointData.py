@@ -1,173 +1,53 @@
-import matplotlib
-matplotlib.use('TkAgg')
-import os
-import matplotlib.pylab as plt
-from sklearn.preprocessing import LabelEncoder
-import pandas as pd
-import numpy as np
-import warnings
-from Classes.Path import Path_info
-from Classes.Plotter import Plotter
-from scipy.signal import butter, filtfilt
 # This code is performing different things
 # 1) Load the data from forces plate
 # 2) Cut each set
 # 3) Cut each rep inside each set by using the markers data (vertical movement)
 
-class Cut_data():
+import os
+import warnings
+import numpy as np
+import pandas as pd
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pylab as plt
 
-    def __init__(self, subject_ind,imu_data_path):
+from scipy.signal import butter, filtfilt
+from sklearn.preprocessing import LabelEncoder
 
-        self.subject_ind = subject_ind
-
-
-        path_info = Path_info(subject_ind=self.subject_ind)
-
-        self.path_imu = path_info.data_subject_path_IMU
-
-        self.imu_data_path = imu_data_path
-
-        self.df1 = pd.read_csv(self.imu_data_path, names=['timestamp', 'acc_x', 'acc_y', 'acc_z', 'gyro_x', 'gyro_y', 'gyro_z'],
-                          header=None)
-        self.df1['timestamp'] = pd.to_datetime(self.df1['timestamp'], errors='coerce')
-        path2 = path_info.exercise_list_file
-
-        self.df2 = pd.read_excel(path2, header=0)
-
-    def cut_exercise(self):
-        self.set = {}
-        label = {}
-        m22 = {}
-        for i in range(len(self.df2['start_time'])):
-            a = pd.to_datetime(self.df2['start_time'][i], errors='coerce')
-            b = pd.to_datetime(self.df2['end_time'][i], errors='coerce')
-            c = self.df2['exercise'][i]
-            if c == 'bent_row' or c == 'lat_raise' or c == 'sh_press':
-                m = self.df1[(self.df1['timestamp'] >= a) & (self.df1['timestamp'] <= b)]
-                m2 = m.assign(exercise=c)
-                m22[i] = m2
-                self.set[i] = m.to_numpy()[:, 1:]  # only IMU signal, delete time
-                label[i] = m2.to_numpy()[:, -1]  # only exercise name
-                # name = "IMU_set_"+ str(i) + ".npy"
-                # np.save(os.path.join(path_info.path_IMU_cut, name), self.set[i])
-
-        new_dict_set = {}
-        i = 1
-        for key, value in zip(self.set.keys(), self.set.values()):
-            new_key = i
-            new_dict_set[new_key] = self.set[key]
-            i=i+1
-
-        for i in new_dict_set.keys():
-            name = "IMU_set_" + str(i) + ".npy"
-            np.save(os.path.join(path_info.path_IMU_cut, name), new_dict_set[i])
-
-        self.IMU_data = np.concatenate([self.set[i] for i in self.set.keys()], axis=0)
-        label_data = np.concatenate([label[i] for i in label.keys()], axis=0)
-        le = LabelEncoder()
-        le.fit(label_data)
-        self.label = le.transform(label_data)
-
-        # filter IMU
-        self.IMU_filt = self.IMU_data.copy()
-        # Filtering the data
-        for col in range(self.IMU_data.shape[1]):
-            self.IMU_filt[:, col] = butter_lowpass_filter(data=self.IMU_data[:, col], cutoff=20, fs=100, order=5)
-
-        # name = "IMU_segmented.npy"
-        # np.save(os.path.join(path_info.path_IMU_cut, name), self.IMU_filt)
-        # name = "label_segmented.npy"
-        # np.save(os.path.join(path_info.path_IMU_cut, name), self.label)
-
-
-def butter_lowpass(cutoff, fs, order=5):
-    nyq = 0.5 * fs
-    normal_cutoff = cutoff / nyq
-    b, a = butter(order, normal_cutoff, btype='low', analog=False)
-    return b, a
-def butter_lowpass_filter(data, cutoff, fs, order=5):
-    b, a = butter_lowpass(cutoff, fs, order=order)
-    y = filtfilt(b, a, data)
-    return y
+from Classes.Path import Path_info
+from Classes.Plotter import Plotter
+from utils import butter_lowpass_filter
 
 class Get_sets_and_reps():
 
-    def __init__(self, subject_ind,imu_data_path):
+    def __init__(self, subject_ind):
+
+        self.subject_ind = subject_ind
+        self.path_info = Path_info(subject_ind=self.subject_ind)
+
+        self.path_IMU = self.path_info.data_subject_path_IMU
+        self.path_points = self.path_info.path_points
+        self.path_markers = self.path_info.path_markers
+        self.imu_data_path = os.path.join(self.path_IMU, "Participant "+"{0:03}".format((self.subject_ind+1))+ " Arm.CWA")
+
+        name = "IMU_segmented.npy"  # obtained from sliding window.py, removed rest
+        self.IMU_data = np.load(os.path.join(self.path_info.path_IMU_cut, name))
 
         self.subject_ind = subject_ind
 
+        self.path_imu = self.path_info.data_subject_path_IMU
 
-        path_info = Path_info(subject_ind=self.subject_ind)
+        # self.df1 = pd.read_csv(self.imu_data_path,
+        #                        names=['timestamp', 'acc_x', 'acc_y', 'acc_z', 'gyro_x', 'gyro_y', 'gyro_z'],
+        #                        header=None)
+        # self.df1['timestamp'] = pd.to_datetime(self.df1['timestamp'], errors='coerce')
+        # path2 = path_info.exercise_list_file
 
-        self.path_IMU = path_info.data_subject_path_IMU
-        self.path_points = path_info.path_points
-        self.path_markers = path_info.path_markers
+        # self.df2 = pd.read_excel(path2, header=0)
 
-        name = "IMU_segmented_arm.npy"  # obtained from sliding window.py, removed rest
-        self.IMU_data = np.load(os.path.join(path_info.path_IMU_cut, name))
-
-        self.subject_ind = subject_ind
-
-        path_info = Path_info(subject_ind=self.subject_ind)
-
-        self.path_imu = path_info.data_subject_path_IMU
-
-        self.imu_data_path = imu_data_path
-
-        self.df1 = pd.read_csv(self.imu_data_path,
-                               names=['timestamp', 'acc_x', 'acc_y', 'acc_z', 'gyro_x', 'gyro_y', 'gyro_z'],
-                               header=None)
-        self.df1['timestamp'] = pd.to_datetime(self.df1['timestamp'], errors='coerce')
-        path2 = path_info.exercise_list_file
-
-        self.df2 = pd.read_excel(path2, header=0)
-
-    def cut_exercise(self):
-        self.set = {}
-        label = {}
-        m22 = {}
-        for i in range(len(self.df2['start_time'])):
-            a = pd.to_datetime(self.df2['start_time'][i], errors='coerce')
-            b = pd.to_datetime(self.df2['end_time'][i], errors='coerce')
-            c = self.df2['exercise'][i]
-            if c == 'bent_row' or c == 'lat_raise' or c == 'sh_press':
-                m = self.df1[(self.df1['timestamp'] >= a) & (self.df1['timestamp'] <= b)]
-                m2 = m.assign(exercise=c)
-                m22[i] = m2
-                self.set[i] = m.to_numpy()[:, 1:]  # only IMU signal, delete time
-                label[i] = m2.to_numpy()[:, -1]  # only exercise name
-                # name = "IMU_set_"+ str(i) + ".npy"
-                # np.save(os.path.join(path_info.path_IMU_cut, name), self.set[i])
-
-        self.new_dict_set = {}
-        i = 1
-        for key, value in zip(self.set.keys(), self.set.values()):
-            new_key = i
-            self.new_dict_set[new_key] = self.set[key]
-            i=i+1
-
-        #for i in new_dict_set.keys():
-            #name = "IMU_set_" + str(i) + ".npy"
-            #np.save(os.path.join(path_info.path_IMU_cut, name), new_dict_set[i])
-
-        self.IMU_data = np.concatenate([self.set[i] for i in self.set.keys()], axis=0)
-        label_data = np.concatenate([label[i] for i in label.keys()], axis=0)
-        le = LabelEncoder()
-        le.fit(label_data)
-        self.label = le.transform(label_data)
-
-        # filter IMU
-        self.IMU_filt = self.IMU_data.copy()
-        # Filtering the data
-        for col in range(self.IMU_data.shape[1]):
-            self.IMU_filt[:, col] = butter_lowpass_filter(data=self.IMU_data[:, col], cutoff=20, fs=100, order=5)
-
-        # name = "IMU_segmented.npy"
-        # np.save(os.path.join(path_info.path_IMU_cut, name), self.IMU_filt)
-        # name = "label_segmented.npy"
-        # np.save(os.path.join(path_info.path_IMU_cut, name), self.label)
-        return self.new_dict_set
-
+    def get_segment(self):
+        name = "IMU_segmented.npy"
+        return np.load(os.path.join(self.path_info.path_IMU_cut, name))
 
     def save_point_rep(self, points,set_ind):
 
@@ -209,7 +89,7 @@ class Get_sets_and_reps():
 
         print("Reps points for " + " saved: " + self.path_points + name)
 
-    def save_point_ecc_conc_rep(self, points,set_ind):
+    def save_point_ecc_conc_rep(self, points, set_ind):
 
         points = np.array(points)
         pointsecc= np.delete(points, -1)
@@ -255,26 +135,28 @@ class Get_sets_and_reps():
 ######################################
 
 ####################
-subject_ind = 2
+subject_ind = 0
 ####################
 
-path_info = Path_info(subject_ind=subject_ind)
-path_imu = path_info.data_subject_path_IMU
-imu_data_path = os.path.join(path_imu, "Participant 00"+str(subject_ind+1)+" Arm.csv")
-get_sets_and_reps = Get_sets_and_reps(subject_ind, imu_data_path)
+get_sets_and_reps = Get_sets_and_reps(subject_ind)
 
-IMU_data =get_sets_and_reps.cut_exercise()
+# IMU_data =get_sets_and_reps.cut_exercise()
+IMU_data = get_sets_and_reps.get_segment()
 ########################
 set_ind=27
 ##########################
-IMU_data2 = IMU_data[set_ind]
-set_filt = np.empty(IMU_data2.shape)
+#IMU_data2 = IMU_data[set_ind]
+set_filt = np.empty(IMU_data.shape)
 
-for col in range(IMU_data2.shape[1]):
-     set_filt[:, col] = butter_lowpass_filter(data=IMU_data2[:, col], cutoff=3, fs=100, order=5)
+for col in range(IMU_data.shape[1]):
+     set_filt[:, col] = butter_lowpass_filter(data=IMU_data[:, col], cutoff=3, fs=100, order=5)
 data_to_plot=set_filt
 
-plotter = Plotter(data_to_plot)
+fig = plt.figure(1)
+ax1 = plt.subplot(2, 1, 1)
+ax2 = plt.subplot(2, 1, 2)
+
+plotter = Plotter(data_to_plot, fig, ax1, ax2)
 
 get_sets_and_reps.save_point_ecc_conc_rep(points=plotter.points,set_ind=set_ind)
 

@@ -1,59 +1,45 @@
 # user-independent exercise classification
 
+import os
+import time
 import warnings
-#import seaborn as sns
+import numpy as np
+import scipy.stats
+import seaborn as sns
+import pandas as pd
+import itertools
 import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as font_manager
 matplotlib.use('TKAgg')
 
-from sklearn.manifold import TSNE
-from sklearn.decomposition import FastICA, PCA
-from sklearn import decomposition
-from sklearn.manifold import MDS
-from sklearn.manifold import LocallyLinearEmbedding
-from sklearn.manifold import Isomap
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn import svm
-import numpy as np
-import os
-import matplotlib.pyplot as plt
-from sklearn.manifold import SpectralEmbedding
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-import pandas as pd
-from sklearn.ensemble import RandomForestClassifier,RandomForestRegressor
-from sklearn.neural_network import MLPClassifier, MLPRegressor
-from sklearn.neural_network import BernoulliRBM
+from sklearn import decomposition, svm, linear_model, metrics, tree
+from sklearn.metrics import r2_score, classification_report
 from sklearn.pipeline import Pipeline
-from sklearn import linear_model, metrics
-from sklearn.svm import SVC
-from sklearn.linear_model import LogisticRegression,Ridge,Lasso
+from sklearn.manifold import TSNE, MDS, LocallyLinearEmbedding, Isomap, SpectralEmbedding
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, AdaBoostClassifier, GradientBoostingClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression, Ridge, Lasso, LinearRegression
 from sklearn.preprocessing import Binarizer
-from itertools import product
-from numpy import unravel_index
-from Classes.Path import Path_info
-import matplotlib.font_manager as font_manager
-from sklearn.linear_model import LinearRegression
-from Classes.Data_2 import Load_data, Create_DB, Up_sampling
-#from tensorflow.python.client import device_lib
+from sklearn.decomposition import FastICA, PCA
+from sklearn.neural_network import MLPClassifier, MLPRegressor, BernoulliRBM
 from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
 from sklearn.gaussian_process.kernels import DotProduct, WhiteKernel,ConstantKernel, RBF
-import time
-from scipy.stats import mode
-from sklearn.metrics import r2_score
-from sklearn.metrics import classification_report
-import time
-from sklearn import tree, svm, neighbors, ensemble
-import scipy.stats
+
+from Classes.Path import Path_info
+from Classes.Data_2 import Load_data, Create_DB, Up_sampling
+
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
-
 def get_available_gpus():
     local_device_protos = device_lib.list_local_devices()
     return [x.name for x in local_device_protos if x.device_type == 'GPU']
+
 
 def compute_balanced_accuracy(true_class, predict_class):
     true_class_dict = {}
@@ -223,7 +209,7 @@ def get_hyperparameters(model_name):
 
     keys = tuned_parameters.keys()
     hyperparameters = []
-    for vals in product(*tuned_parameters.values()):
+    for vals in itertools.product(*tuned_parameters.values()):
         hyperparameters.append(dict(zip(tuned_parameters, vals)))
 
     return hyperparameters
@@ -409,7 +395,7 @@ class Machine_Learning_clustering():
 
             def info_best(accuracies_mean, accuracies_std):
 
-                best_index_acc = unravel_index(accuracies_mean.argmax(), accuracies_mean.shape)
+                best_index_acc = np.unravel_index(accuracies_mean.argmax(), accuracies_mean.shape)
                 best_knn_acc = self.nns[best_index_acc[1]]
 
                 best_mean_acc = accuracies_mean[best_index_acc]
@@ -606,7 +592,7 @@ class Machine_Learning_classification():
 
             print("Performing SVC " + kernel + " - K " + str(self.current_K))
 
-            model = SVC(kernel=kernel)
+            model = svm.SVC(kernel=kernel)
 
             name = 'SVC_' + str(kernel)
 
@@ -681,7 +667,7 @@ class Machine_Learning_classification():
 
             n_estimators = hyperparameter['n_estimators']
             print("Performing AdaBoostClassifier " + str(n_estimators) + " - K " + str(self.current_K))
-            model = ensemble.AdaBoostClassifier(n_estimators=n_estimators)
+            model = AdaBoostClassifier(n_estimators=n_estimators)
 
             name = 'AdaBoostClassifier' + str(n_estimators)
 
@@ -689,7 +675,7 @@ class Machine_Learning_classification():
 
             n_estimators= hyperparameter['n_estimators']
             print("Performing GradientBoostingClassifier" + str(n_estimators) + " - K " + str(self.current_K))
-            model = ensemble.GradientBoostingClassifier(n_estimators=n_estimators)
+            model = GradientBoostingClassifier(n_estimators=n_estimators)
 
             name = 'GradientBoostingClassifier' + str(n_estimators)
 
@@ -731,7 +717,7 @@ class Machine_Learning_classification():
 
 
                 for KK in range(K_fold):
-                    create_DB = Create_DB(DB_N, hyper_DA,KK=KK)
+                    create_DB = Create_DB(DB_N, hyper_DA, KK=KK)
                     create_DB.create_database(plotIt=False)
                     load_data = Load_data(DB_N=self.DB_N, which_model='MLP')
                     self.K_fold_I = load_data.K_fold_I
@@ -779,7 +765,7 @@ class Machine_Learning_classification():
 
                 def info_best(accuracies_mean, accuracies_std):
 
-                    best_index_acc = unravel_index(accuracies_mean.argmax(), accuracies_mean.shape)
+                    best_index_acc = np.unravel_index(accuracies_mean.argmax(), accuracies_mean.shape)
 
                     best_mean_acc = accuracies_mean[best_index_acc]
                     best_std_acc = accuracies_std[best_index_acc]
@@ -927,7 +913,7 @@ class Machine_Learning_classification():
         return df,Test_acc_str,Test_pearson_str,y_pred,y_true
 
 DB_N = 0
-subject = 2
+subject = 0
 
 which_model = 'MLP'
 path_info = Path_info(subject_ind=subject)
@@ -945,7 +931,7 @@ pearson = np.empty([K_fold])
 y_test_pred = {}
 y_test_true = {}
 # KK=0
-import seaborn as sns
+
 def confusion_matrix(cm, accuracy):
     index = ['bent_row', 'lat_raise', 'sh_press']
     columns = ['bent_row', 'lat_raise', 'sh_press']
