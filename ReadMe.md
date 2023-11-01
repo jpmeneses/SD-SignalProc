@@ -35,3 +35,32 @@ Classes folder:
   - GatherMarker.py: code use to gather motion capture data and compute length of upper/lower arm
   - Load_eccconc_data.py:  code use to load all velocity data files
   - PointData2.py: code use to subtitute the rep/conc/ecc by manually seg to the old one.
+
+
+# Usage
+
+- Environment
+
+    - Python 3.9
+
+    - OpenCV, scikit-image, tqdm, oyaml
+
+    - *we recommend [Anaconda](https://www.anaconda.com/distribution/#download-section) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html#linux-installers), then you can create the TensorFlow 2.2 environment with commands below*
+
+        ```console
+        conda create -n sd python=3.9
+
+        conda install -c anaconda ipykernel scikit-learn pandas seaborn git
+
+        conda install -c conda-forge matplotlib tabulate notebook jupyterlab openjdk
+
+        python -m pip install "git+https://github.com/digitalinteraction/openmovement-python.git#egg=openmovement"
+
+        python -m pip install accelerometer
+        ```
+
+    - *NOTICE: if you create a new conda environment, remember to activate it before any other command*
+
+        ```console
+        source activate sd
+        ```
