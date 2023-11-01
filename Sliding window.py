@@ -1,25 +1,29 @@
-from mpl_toolkits import mplot3d
-from scipy.signal import butter, filtfilt
-import random
-from sklearn.preprocessing import LabelEncoder
-import matplotlib
-from tensorflow.keras.utils import to_categorical
-import numpy as np
 import os
-import matplotlib.pyplot as plt
+import random
+import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+
+from scipy.signal import butter, filtfilt
+from sklearn.preprocessing import LabelEncoder
 from scipy.stats import mode
+
 from Classes.Path import Path_info
+
 
 def butter_lowpass(cutoff, fs, order=5):
     nyq = 0.5 * fs
     normal_cutoff = cutoff / nyq
     b, a = butter(order, normal_cutoff, btype='low', analog=False)
     return b, a
+
+
 def butter_lowpass_filter(data, cutoff, fs, order=5):
     b, a = butter_lowpass(cutoff, fs, order=order)
     y = filtfilt(b, a, np.ravel(data))
     return y
+
+
 def derivate(data, delta_t):
    d = np.zeros(data.shape[0])
    # Left derivates for the first value
@@ -31,15 +35,6 @@ def derivate(data, delta_t):
        d[i] = (data[i+1] - data[i-1]) / (2*delta_t)
    return d
 
-
-class Cut_data():
-
-    def __init__(self, subject_ind):
-
-        self.subject_ind = subject_ind
-
-
-#self = Cut_data(subject_ind=24, imu_data_path=imu_data_path)
 
 class Cut_data():
 
@@ -184,7 +179,7 @@ for subject_ind in subjects_ind:
     imu_data_path = os.path.join(path_imu, "Participant "+"{0:03}".format((subject_ind+1))+ " Arm.csv")
 
     cut_data = Cut_data(subject_ind=subject_ind, imu_data_path=imu_data_path)
-    IMU_filt=cut_data.cut_exercise()  # save IMU segmented data
+    IMU_filt = cut_data.cut_exercise()  # save IMU segmented data
     name = "IMU_segmented_Arm.npy"
     np.save(os.path.join(path_info.path_IMU_cut, name), IMU_filt)
 
