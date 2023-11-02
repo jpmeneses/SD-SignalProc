@@ -33,7 +33,7 @@ py.mkdir(output_dir)
 py.args_to_yaml(py.join(output_dir, 'settings.yml'), args)
 
 file_dir = '../Data/'
-pat_filenames = ['24']#,'14']
+pat_filenames = ['01','03']#,'14']
 
 X,y = tl.load_data(file_dir, pat_filenames)
 len_dataset,wdt,n_f,n_ch = np.shape(X)
