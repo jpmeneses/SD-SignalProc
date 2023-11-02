@@ -59,11 +59,13 @@ def load_data(dir_dataset, pat_file_names):
                 print('    Data from sensor',sens_idx)
                 if sens_idx.split('_')[0] == 'gyro':
                     scales = np.arange(1,641,10)
+                    sc = 5000
                 else:
                     scales = np.arange(1,1025,16)
+                    sc = 500
                 # apply  PyWavelets continuous wavelet transfromation function
                 coeffs, freqs = pywt.cwt(df[sens_idx], scales, wavelet = 'mexh')
-                coeffs_w = window_data(coeffs)
+                coeffs_w = window_data(coeffs) / sc
                 if not(cwt_flag):
                     X_file = coeffs_w
                     cwt_flag = True
