@@ -6,8 +6,6 @@ def _get_norm_layer(norm):
         return lambda: lambda x: x
     elif norm == 'batch_norm':
         return keras.layers.BatchNormalization
-    elif norm == 'instance_norm':
-        return tfa.layers.InstanceNormalization
     elif norm == 'layer_norm':
         return keras.layers.LayerNormalization
 
@@ -31,7 +29,7 @@ def _residual_block(x, norm):
     h = Norm()(h)
     h = tf.nn.leaky_relu(h)
 
-    h = tfp.layers.Convolution2DFlipout(dim, 3, padding='same')(h)
+    h = keras.layers.Conv2D(dim, 3, kernel_initializer='he_normal', padding='same', use_bias=False)(h)
     h = Norm()(h)
 
     return keras.layers.add([x, h])
@@ -44,7 +42,7 @@ def encoder(
     num_layers=4,
     num_res_blocks=2,
     dropout=0.0,
-    norm='instance_norm'):
+    norm='batch_norm'):
 
     x = inputs = keras.Input(input_shape)
     x = keras.layers.Conv2D(filters,3,padding="same",activation=tf.nn.leaky_relu,kernel_initializer="he_normal")(x)
@@ -72,9 +70,9 @@ def decoder(
     num_layers=4,
     num_res_blocks=2,
     dropout=0.0,
-    output_activation='tanh',
+    output_activation=None,
     output_initializer='glorot_normal',
-    norm='instance_norm'):
+    norm='batch_norm'):
     Norm = _get_norm_layer(norm)
 
     hgt,wdt,n_out = output_shape
