@@ -57,14 +57,13 @@ def load_data(dir_dataset, pat_file_names):
             sensor_idxs = list(df.keys())
             for sens_idx in sensor_idxs:
                 print('    Data from sensor',sens_idx)
+                scales = np.arange(1,33,1)
                 if sens_idx.split('_')[0] == 'gyro':
-                    scales = np.arange(1,641,10)
                     sc = 5000
                 else:
-                    scales = np.arange(1,1025,16)
-                    sc = 500
+                    sc = 200
                 # apply  PyWavelets continuous wavelet transfromation function
-                coeffs, freqs = pywt.cwt(df[sens_idx], scales, wavelet = 'mexh')
+                coeffs, freqs = pywt.cwt(np.clip(df[sens_idx],-sc,sc), scales, wavelet = 'mexh')
                 coeffs_w = window_data(coeffs) / sc
                 if not(cwt_flag):
                     X_file = coeffs_w
