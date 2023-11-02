@@ -128,9 +128,9 @@ for ep in range(args.epochs):
   for A in tqdm.tqdm(A_dataset, desc='Ep-%03d' % (ep+1), total=len_dataset//args.batch_size):
     G_loss_dict = train_step(A)
 
-  # summary
-  with train_summary_writer.as_default():
-    tl.summary(G_loss_dict, step=G_optimizer.iterations, name='G_losses')
+    # summary
+    with train_summary_writer.as_default():
+      tl.summary(G_loss_dict, step=G_optimizer.iterations, name='G_losses')
 
   # save checkpoint
   if (((ep+1) % args.epoch_ckpt) == 0) or ((ep+1)==args.epochs):
